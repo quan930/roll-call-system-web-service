@@ -56,18 +56,27 @@ class Teacher extends Controller
      * 添加课程
      * @return \think\response\Json
      */
-    public function addCourse(){
+    public function addCourses(){
         Config::set("default_return_type","json");
-        $name = input('name');//课程名称
-        $string = input('grade');//班级
-        $arr=[];
-        foreach (explode(',', $string) as $grade){
-            array_push($arr,new Course(null,$name,$grade));
+        $list=input('post.courses/a');
+        $courses=[];
+        for ($i=0;$i<count($list);$i++){
+            array_push($courses,new Course(null,$list["$i"]['name'],$list["$i"]['grade']));
         }
-        $bool = model("LogicCourse","logic")->addCourse($arr);
-        if ($bool==1){
-            return json(array("description"=>"ok"),200);
+        $bool = model("LogicCourse","logic")->addCourses($courses);
+        if ($bool===0){
+            return json(array("description"=>"error", "detail"=>"data error"),400);
         }
-        return json(array("description"=>"error", "detail"=>"data error"),400);
+        return json(array("description"=>"ok"),200);
+    }
+
+    /**
+     * 全部课程
+     * @return \think\response\Json
+     */
+    public function allCourses(){
+        Config::set("default_return_type","json");
+        $data = model("LogicCourse","logic")->allCourses();
+        return json(array("description"=>"ok", "data"=>$data),200);
     }
 }

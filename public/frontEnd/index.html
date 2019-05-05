@@ -59,7 +59,7 @@
         <el-main>
             <!--<home-page v-if="view==1" v-bind:home="data"></home-page>-->
             <roll-call v-if="view==1"></roll-call>
-            <course-page v-if="view==2"></course-page>
+            <course-page v-if="view==2" v-bind:courses="courses"></course-page>
             <grade-page v-if="view==3" v-bind:grades="grades"></grade-page>
         </el-main>
     </el-container>

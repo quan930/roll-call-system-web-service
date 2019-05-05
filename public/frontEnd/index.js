@@ -19,17 +19,111 @@ window.onload=function () {
     // 课程页面
     Vue.component('course-page', {
         props: {
-
+            courses:Object
         },
         template:
-            `<div style="height: 100%;background-color: #5daf34">
+            `<div style="height: 100%;">
                 <el-row>
                     <el-col :span="2">
                         <h1>课程页面</h1>
                     </el-col>
+                    <el-col v-if="courses.fun==0" :span="2" :offset="19">
+                        <el-button style="margin-top: 30px" size="mini" type="primary" v-on:click="addCourses">添加班级</el-button>
+                    </el-col>
+                    <el-col v-else :span="6" :offset="15">
+                        <el-row>
+                            <el-col :span="8">
+                                <el-button style="margin-top: 30px" size="mini" type="primary" v-on:click="addCourse">添加</el-button>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-button style="margin-top: 30px" size="mini" type="danger" v-on:click="upload">提交</el-button>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-button style="margin-top: 30px" size="mini" type="danger" v-on:click="toreturn">返回</el-button>
+                            </el-col>
+                        </el-row>
+                    </el-col>
+                    <el-col v-if="courses.fun==0" :span="24">
+                        <el-table :data="courses.courses"
+                            key="courses.courses"
+                            height="350"
+                            border
+                            style="width: 100%">
+                            <el-table-column
+                                prop="name"
+                                label="课程名">
+                            </el-table-column>
+                            <el-table-column
+                                prop="grade"
+                                label="授课班级">
+                            </el-table-column>
+                        </el-table>
+                    </el-col>
+                    <el-col v-else :span="24">
+                        <el-table :data="courses.upload"
+                            key="courses.upload"
+                            height="350"
+                            border
+                            style="width: 100%">
+                            <el-table-column label="课程名称">
+                                <template slot-scope="scope">
+                                    <el-input v-model="courses.upload[scope.$index].name" placeholder="请输入内容"></el-input>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="授课班级">
+                                <template slot-scope="scope">
+                                    <el-input v-model="courses.upload[scope.$index].grade" placeholder="请输入内容"></el-input>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="操作">
+                                <template slot-scope="scope">
+                                    <el-button size="mini" type="danger" v-on:click="removeCourse(scope.$index)">删除</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-col>
                 </el-row>
             </div>`
         ,methods: {
+            //添加课程
+            addCourses(){
+                app.courses.fun=1;
+            },
+            //返回按钮
+            toreturn(){
+                app.courses.upload=[];
+                app.courses.fun=0;
+            },
+            //添加课程
+            addCourse(){
+                app.courses.upload.push({'name':'','grade':''})
+            },
+            //添加页面删除
+            removeCourse(index){
+                app.courses.upload.splice(index, 1)
+            },
+            upload(){
+                //添加课程
+                let courses = [];
+                app.courses.upload.forEach(course=>{
+                    courses.push({name:course.name,grade:course.grade})
+                })
+                //添加课程
+                Vue.http.post("/index.php/index/Teacher/addCourses",{courses:courses}).then(res => {
+                    console.log(res.body);
+                    //成功返回主页面
+                    Vue.http.get("/index.php/index/Teacher/allCourses").then(res => {
+                        app.courses.courses=res.body.data;
+                        app.courses.upload=[];
+                        app.courses.fun=0;
+                    },response => {
+                        console.log("error");
+                    })
+                },response => {
+                    console.log("error");
+                    alert("添加错误")
+                })
+            }
         }
     })
     //班级页面
@@ -54,38 +148,38 @@ window.onload=function () {
                                     <el-input placeholder="请输入内容" v-model="grades.upload.grade">
                                         <template slot="prepend">班级名称</template>
                                     </el-input>
-                                    </el-col>
-                                    <el-col :span="6" :offset="4">
-                                        <el-button v-on:click="addStudent">添加学生</el-button>
-                                    </el-col>
-                                    <el-col :span="6">
-                                        <el-button type="danger" v-on:click="upload">提交</el-button>
-                                    </el-col>
-                                    <el-table :data="grades.upload.students"
-                                        height="350"
-                                        border
-                                        style="width: 100%">
-                                        <el-table-column label="学号">
-                                            <template slot-scope="scope">
-                                                <el-input v-model="grades.upload.students[scope.$index].id" placeholder="请输入内容"></el-input>
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column label="名字">
-                                            <template slot-scope="scope">
-                                                <el-input v-model="grades.upload.students[scope.$index].name" placeholder="请输入内容"></el-input>
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column label="班级">
-                                            <template slot-scope="scope">
-                                                <el-input v-model="grades.upload.grade" :disabled="true"></el-input>
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column label="操作">
-                                            <template slot-scope="scope">
-                                                <el-button size="mini" type="danger" v-on:click="removeStudent(scope.$index)">删除</el-button>
-                                            </template>
-                                        </el-table-column>
-                                    </el-table>
+                                </el-col>
+                                <el-col :span="6" :offset="4">
+                                    <el-button v-on:click="addStudent">添加学生</el-button>
+                                </el-col>
+                                <el-col :span="6">
+                                    <el-button type="danger" v-on:click="upload">提交</el-button>
+                                </el-col>
+                                <el-table :data="grades.upload.students"
+                                    height="350"
+                                    border
+                                    style="width: 100%">
+                                    <el-table-column label="学号">
+                                        <template slot-scope="scope">
+                                            <el-input v-model="grades.upload.students[scope.$index].id" placeholder="请输入内容"></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="名字">
+                                        <template slot-scope="scope">
+                                            <el-input v-model="grades.upload.students[scope.$index].name" placeholder="请输入内容"></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="班级">
+                                        <template slot-scope="scope">
+                                            <el-input v-model="grades.upload.grade" :disabled="true"></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="操作">
+                                        <template slot-scope="scope">
+                                            <el-button size="mini" type="danger" v-on:click="removeStudent(scope.$index)">删除</el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
                             </div>
                             <div v-else>
                                 <el-table :data="grades.grades"
@@ -171,6 +265,12 @@ window.onload=function () {
                     grade:'',
                     students:[]
                 }
+            },
+            //课程页面
+            courses:{
+                courses:[],
+                fun: 0,
+                upload:[]
             }
         },
         methods:{
@@ -186,6 +286,11 @@ window.onload=function () {
                         break;
                     case '2':
                         console.log("课程管理页面");
+                        Vue.http.get("/index.php/index/Teacher/allCourses").then(res => {
+                            app.courses.courses=res.body.data
+                        },response => {
+                            console.log("error");
+                        })
                         break;
                     case '3':
                         console.log("班级管理页面");
